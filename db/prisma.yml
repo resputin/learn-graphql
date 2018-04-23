@@ -1,0 +1,5 @@
+service: hackernews-graph-node
+stage: dev
+datamodel: datamodel.graphql
+secret: something-super-secret
+cluster: public-bluetoucan-736/prisma-us1
