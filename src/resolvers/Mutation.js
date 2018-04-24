@@ -37,37 +37,71 @@ function deleteLink(root, args, context, info) {
 
 async function signup(parent, args, context, info) {
   const password = await bcrypt.hash(args.password, 10);
-  const user = await context.db.mutation.createUser({
-    data: { ...args, password },
-  }, `{ id }`)
+  const user = await context.db.mutation.createUser(
+    {
+      data: { ...args, password }
+    },
+    `{ id }`
+  );
 
-  const token = jwt.sign({ userId: user.id}, APP_SECRET);
+  const token = jwt.sign({ userId: user.id }, APP_SECRET);
 
   return {
-    token, 
+    token,
     user
-  }
+  };
 }
 
 async function login(parent, args, context, info) {
-  const user = await context.db.query.user({ where: { email: args.email } }, `{ id password }`)
+  const user = await context.db.query.user(
+    { where: { email: args.email } },
+    `{ id password }`
+  );
   if (!user) {
-    throw new Error('No User Found')
+    throw new Error('No User Found');
   }
 
-  const valid = await bcrypt.compare(args.password, user.password)
+  const valid = await bcrypt.compare(args.password, user.password);
   if (!valid) {
-    throw new Error('Invalid Password')
+    throw new Error('Invalid Password');
   }
 
-  const token = jwt.sign({ userId: user.id}, APP_SECRET)
+  const token = jwt.sign({ userId: user.id }, APP_SECRET);
 
   return {
-    token, 
+    token,
     user
+  };
+}
+
+async function vote(parent, args, context, info) {
+  const userId = getUserId(context);
+
+  const linkExists = await context.db.exists.Vote({
+    user: { id: userId },
+    link: { id: args.linkId }
+  });
+
+  if (linkExists) {
+    throw new Error(`Already voted for link ${args.linkId}`);
   }
+
+  return context.db.mutation.createVote(
+    {
+      data: {
+        user: { connect: { id: userId } },
+        link: { connect: { id: args.linkId } }
+      }
+    },
+    info
+  );
 }
 
 module.exports = {
-  post, updateLink, deleteLink, signup, login
+  post,
+  updateLink,
+  deleteLink,
+  signup,
+  login,
+  vote
 };
