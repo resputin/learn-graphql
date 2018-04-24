@@ -19,21 +19,18 @@ function post(root, args, context, info) {
 }
 
 function updateLink(root, args, context, info) {
-  const userId = getUserId(context);
   const params = {
     data: Object.assign({}, args),
-    where: { id: args.id, userId }
+    where: { id: args.id }
   };
   delete params.data.id;
   return context.db.mutation.updateLink(params, info);
 }
 
 function deleteLink(root, args, context, info) {
-  const userId = getUserId(context);
   return context.db.mutation.deleteLink({
     where: {
-      id: args.id,
-      userId
+      id: args.id
     }
   });
 }
